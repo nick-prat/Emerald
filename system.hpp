@@ -6,17 +6,13 @@
 
 namespace Emerald {
 
-    class IBaseSystem {
-    public:
-        typedef unsigned int system_id;
-        inline static system_id systemIdCounter = 0;
-    };
-
     template<typename system_t>
-    class ISystem : public IBaseSystem {
+    class ISystem {
     public:
+        using system_id = unsigned int;
+
         static system_id getSystemID() {
-            static system_id systemId = systemIdCounter++;
+            static system_id systemId = systemIDCounter++;
             return systemId;
         }
 
@@ -43,6 +39,9 @@ namespace Emerald {
     protected:
         inline static system_id systemId;
         std::set<unsigned int> m_entities;
+
+    private:
+        inline static system_id systemIDCounter = 0;
     };
 
 };

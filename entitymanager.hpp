@@ -1,5 +1,5 @@
-#ifndef _ENTITY_MANAGER_H
-#define _ENTITY_MANAGER_H
+#ifndef _EMERALD_ENTITY_MANAGER_H
+#define _EMERALD_ENTITY_MANAGER_H
 
 #include <vector>
 #include <memory>
@@ -9,6 +9,7 @@
 #include <type_traits>
 
 #include "entity.hpp"
+#include "event.hpp"
 #include "system.hpp"
 
 namespace Emerald {
@@ -246,4 +247,4 @@ namespace Emerald {
     };
 };
 
-#endif // _ENTITY_MANGER_H
+#endif // _EMERALD_ENTITY_MANGER_H
