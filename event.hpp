@@ -3,17 +3,22 @@
 
 namespace Emerald {
 
-    class IEvent {
+    class IBaseEvent {
     public:
-        using event_id = unsigned int;
+        typedef unsigned int event_id;
 
+    protected:
+        inline static event_id eventIDCounter = 0;
+
+    };
+
+    template<typename event_t>
+    class IEvent : IBaseEvent {
+    public:
         static event_id getEventID() {
             static event_id eventID = eventIDCounter++;
             return eventID;
         };
-
-    private:
-        inline static event_id eventIDCounter = 0;
     };
 
 };

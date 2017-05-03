@@ -233,6 +233,23 @@ namespace Emerald {
             }
         }
 
+        template<typename event_t>
+        void postEvent(const event_t& event) {
+            auto list = m_events.find(event_t::getEventID());
+            if(list != m_events.end()) {
+                for(auto [id, system] : m_events) {
+                    system->handleEvent(event_t::getEventID(), event);
+                }
+            } else {
+
+            }
+        }
+
+        template<typename event_t>
+        void subscribeToEvent(IBaseSystem* system) {
+            // Put event into list
+        }
+
         float getTimeScale() {
             return m_timeScale;
         }
@@ -243,6 +260,7 @@ namespace Emerald {
         std::vector<entity_t> m_entities;
         std::unordered_map<IBaseSystem::system_id, std::unique_ptr<IBaseSystem>> m_systems;
         std::unordered_map<IBaseSystem::system_id, std::function<void(entity_manager_t&)>> m_systemUpdaters;
+        std::unordered_map<IEvent::event_id, std::vector<IBaseSystem*>> m_events;
         std::tuple<std::vector<Component<comp_ts>>...> m_componentLists;
     };
 };

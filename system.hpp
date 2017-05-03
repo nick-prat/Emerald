@@ -1,18 +1,26 @@
 #ifndef _SYSTEMS_H
 #define _SYSTEMS_H
 
-#include <iostream>
 #include <set>
+
+#include "event.hpp"
 
 namespace Emerald {
 
-    template<typename system_t>
-    class ISystem {
+    class IBaseSystem {
     public:
-        using system_id = unsigned int;
+        typedef unsigned int system_id;
+        virtual void handleEvent(IEvent::event_id eventID, const IBaseEvent& event) = 0;
 
+    protected:
+        inline static system_id systemIdCounter = 0;
+    };
+
+    template<typename system_t>
+    class ISystem : public IBaseSystem {
+    public:
         static system_id getSystemID() {
-            static system_id systemId = systemIDCounter++;
+            static system_id systemId = systemIdCounter++;
             return systemId;
         }
 
@@ -27,6 +35,10 @@ namespace Emerald {
         ISystem& operator=(const ISystem&) = delete;
         ISystem& operator=(ISystem&& system) = delete;
 
+        void handleEvent(IBaseEvent::event_id eventID, const IBaseEvent& event) {
+            static_cast<system_t*>(this)->handleEvent(eventID);
+        }
+
         void subscribe(unsigned int entityID) {
             m_entities.insert(entityID);
         }
@@ -37,11 +49,7 @@ namespace Emerald {
         }
 
     protected:
-        inline static system_id systemId;
         std::set<unsigned int> m_entities;
-
-    private:
-        inline static system_id systemIDCounter = 0;
     };
 
 };
