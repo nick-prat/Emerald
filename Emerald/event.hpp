@@ -13,7 +13,7 @@ namespace Emerald {
     };
 
     template<typename event_t>
-    class IEvent : IBaseEvent {
+    class IEvent : public IBaseEvent {
     public:
         static event_id getEventID() {
             static event_id eventID = eventIDCounter++;

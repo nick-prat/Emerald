@@ -4,23 +4,25 @@
 #include <set>
 
 #include "event.hpp"
+#include "Util/types.hpp"
 
 namespace Emerald {
 
+    class EntityManager;
+
     class IBaseSystem {
     public:
-        typedef unsigned int system_id;
-        virtual void handleEvent(IEvent::event_id eventID, const IBaseEvent& event) = 0;
+        virtual void update(EntityManager&) = 0;
 
     protected:
-        inline static system_id systemIdCounter = 0;
+        inline static emerald_id systemIdCounter = 0;
     };
 
     template<typename system_t>
     class ISystem : public IBaseSystem {
     public:
-        static system_id getSystemID() {
-            static system_id systemId = systemIdCounter++;
+        static emerald_id getSystemID() {
+            static emerald_id systemId = systemIdCounter++;
             return systemId;
         }
 
@@ -36,15 +38,14 @@ namespace Emerald {
         ISystem& operator=(ISystem&& system) = delete;
 
         void handleEvent(IBaseEvent::event_id eventID, const IBaseEvent& event) {
-            static_cast<system_t*>(this)->handleEvent(eventID);
+            static_cast<system_t*>(this)->handleEvent(eventID, event);
         }
 
         void subscribe(unsigned int entityID) {
             m_entities.insert(entityID);
         }
 
-        template<typename entity_manager_t>
-        void update(entity_manager_t& entMan) {
+        void update(EntityManager& entMan) {
             static_cast<system_t*>(this)->update(entMan);
         }
 
