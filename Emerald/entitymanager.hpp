@@ -38,12 +38,11 @@ namespace Emerald {
         }
 
         template<typename comp_t>
-        const std::vector<Component<comp_t>>& getComponentList() const {
-            auto iter = m_components.find(comp_t::getComponentID());
-            if(iter != m_components.end()) {
-
+        PoolView<comp_t> getComponentView() {
+            if(auto iter = m_components.find(Component<comp_t>::getComponentID()); iter != m_components.end()) {
+                return static_cast<ComponentPool<comp_t>*>(iter->second.get())->getComponentView();
             } else {
-
+                throw bad_component("getComponentView invalid component type");
             }
         }
 

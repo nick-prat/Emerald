@@ -70,24 +70,40 @@ void createEntities() {
     }
 }
 
+auto fib(int n) {
+    auto v1 = -1;
+    auto v2 = 1;
+    auto total = 0;
+    for(int i = 0; i <= n; i++) {
+        total = v2 + v1;
+        v1 = v2;
+        v2 = total;
+    }
+    return v2;
+}
+
+// Using a view seems to be at the very least ~15% faster
 int main() {
     createEntities();
+    auto view = entMan.getComponentView<ComponentA>();
+    std::cout << view.getSize() << '\n';
+
     auto start = std::chrono::system_clock::now();
-    entMan.mapEntities([](emerald_id id) {
-        auto& compa = entMan.getComponent<ComponentA>(id);
-        auto& compb = entMan.getComponent<ComponentB>(id);
-        auto& compc = entMan.getComponent<ComponentC>(id);
-        if(id != compa.getVal()) {
-            std::cout << id << " != " << compa.getVal() << '\n';
-        }
-        if(id != compb.getVal()) {
-            std::cout << id << " != " << compb.getVal() << '\n';
-        }
-        if(id != compc.getVal()) {
-            std::cout << id << " != " << compc.getVal() << '\n';
-        }
-    });
+    for(int i = 0; i < view.getSize(); i++) {
+        fib(view[i].getVal());
+    }
     auto end = std::chrono::system_clock::now();
-    auto time = end - start;
-    std::cout << "Checks passed in " << std::chrono::duration_cast<std::chrono::microseconds>(time).count() << "us\n";
+    auto time1 = end - start;
+
+    start = std::chrono::system_clock::now();
+    entMan.mapEntities([](emerald_id id) {
+        fib(entMan.getComponent<ComponentA>(id).getVal());
+    });
+    end = std::chrono::system_clock::now();
+    auto time2 = end - start;
+
+    std::cout << "Check 1 passed in " << std::chrono::duration_cast<std::chrono::microseconds>(time1).count() << "us\n";
+    std::cout << "Check 2 passed in " << std::chrono::duration_cast<std::chrono::microseconds>(time2).count() << "us\n";
+    std::cout << "Difference " << (double)(std::chrono::duration_cast<std::chrono::microseconds>(time2).count())
+            / std::chrono::duration_cast<std::chrono::microseconds>(time1).count() << '\n';
 }

@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstring>
 #include "Util/types.hpp"
+#include "Util/exceptions.hpp"
 
 namespace Emerald {
 
@@ -96,23 +97,34 @@ namespace Emerald {
     template<typename comp_t>
     class PoolView {
     public:
-        PoolView(Component<comp_t>* view, std::size_t size)
+        PoolView(Component<comp_t>* view, std::size_t size) noexcept
         : m_view(view)
         , m_size(size) {}
 
-        std::size_t getSize() {
+        std::size_t getSize() const {
             return m_size;
         }
 
-        comp_t& getComponent(emerald_id id) {
-            if(m_view[id].isEnabled()) {
-
-            }
-            return m_view[id].getComponent();
+        bool contains(emerald_id id) const {
+            return id < m_size || !m_view[id].isEnabled();
         }
 
-        const comp_t& getComponent(emerald_id id) const {
-            return m_view[id].getComponent();
+        comp_t& operator[](emerald_id id) {
+            if(m_view[id].isEnabled() && id < m_size) {
+                return m_view[id].getComponent();
+            } else {
+                std::cout << id << '\n';
+                throw bad_id("PoolView::operator[] invalid id");
+            }
+        }
+
+        const comp_t& operator[](emerald_id id) const {
+            if(m_view[id].isEnabled() && id < m_size) {
+                return m_view[id].getComponent();
+            } else {
+                std::cout << id << '\n';
+                throw bad_id("PoolView::operator[] invalid id");
+            }
         }
 
         void map(std::function<void(comp_t&)> func) {
@@ -149,9 +161,7 @@ namespace Emerald {
         : m_poolBasePtr(reinterpret_cast<Component<comp_t>*>(malloc(sizeof(Component<comp_t>) * amount)))
         , m_poolTop(0)
         , m_poolSize(amount) {
-            //static_assert(std::is_nothrow_constructible<comp_t>::value, "Component must be no-throw construcible");
             static_assert(std::is_nothrow_move_constructible<comp_t>::value, "Component must be no-throw move construcible");
-            //static_assert(std::is_nothrow_destructible<comp_t>::value, "Component must be no-throw destructible");
         };
 
         ~ComponentPool() {
@@ -162,7 +172,6 @@ namespace Emerald {
                     }
                 }
                 free(m_poolBasePtr);
-                //delete[] reinterpret_cast<unsigned char*>(m_poolBasePtr);
             }
         }
 
@@ -198,11 +207,11 @@ namespace Emerald {
         }
 
         PoolView<comp_t> getComponentView() {
-            return PoolView<comp_t>(m_poolBasePtr, m_poolSize);
+            return PoolView<comp_t>(m_poolBasePtr, m_poolTop);
         };
 
         const PoolView<comp_t> getComponentView() const {
-            return PoolView<comp_t>(m_poolBasePtr, m_poolSize);
+            return PoolView<comp_t>(m_poolBasePtr, m_poolTop);
         }
 
         comp_t& getComponent(emerald_id id) {
