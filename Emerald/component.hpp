@@ -2,8 +2,6 @@
 #define _EMERALD_COMPONENT_H
 
 #include <functional>
-#include <sstream>
-#include <iostream>
 #include <stack>
 #include <cstdlib>
 #include <cstring>
@@ -107,11 +105,11 @@ namespace Emerald {
             }
         }
 
-        bool operator==(const PoolViewIter<comp_t>& other) {
+        bool operator==(const PoolViewIter<comp_t>& other) const {
             return m_loc == other.m_loc;
         }
 
-        bool operator!=(const PoolViewIter<comp_t>& other) {
+        bool operator!=(const PoolViewIter<comp_t>& other) const {
             return m_loc != other.m_loc;
         }
 
@@ -145,9 +143,56 @@ namespace Emerald {
         }
 
     private:
-        Component<comp_t>* m_view;
+        Component<comp_t>* const m_view;
         emerald_id m_loc;
-        emerald_id m_end;
+        const emerald_id m_end;
+    };
+
+    template<typename comp_t>
+    class ConstPoolViewIter {
+    public:
+        ConstPoolViewIter(Component<comp_t>* view, emerald_id loc, emerald_id end)
+        : m_view(view)
+        , m_loc(loc)
+        , m_end(end) {
+            while(m_loc != m_end && m_view[m_loc].isEnabled() == false) {
+                m_loc++;
+            }
+        }
+
+        bool operator==(const ConstPoolViewIter<comp_t>& other) const {
+            return m_loc == other.m_loc;
+        }
+
+        bool operator!=(const ConstPoolViewIter<comp_t>& other) const {
+            return m_loc != other.m_loc;
+        }
+
+        ConstPoolViewIter& operator++() {
+            do {
+                m_loc++;
+            } while(m_loc != m_end && m_view[m_loc].isEnabled() == false);
+            return *this;
+        }
+
+        ConstPoolViewIter operator++(int) {
+            PoolViewIter<comp_t> tmp(*this);
+            operator++();
+            return tmp;
+        }
+
+        const comp_t* operator->() const {
+            return &(m_view[m_loc].getComponent());
+        }
+
+        const comp_t& operator*() const {
+            return m_view[m_loc].getComponent();
+        }
+
+    private:
+        const Component<comp_t>* const m_view;
+        emerald_id m_loc;
+        const emerald_id m_end;
     };
 
     template<typename comp_t>
@@ -163,6 +208,14 @@ namespace Emerald {
 
         PoolViewIter<comp_t> end() {
             return PoolViewIter<comp_t>(m_view, m_size, m_size);
+        }
+
+        ConstPoolViewIter<comp_t> begin() const {
+            return ConstPoolViewIter<comp_t>(m_view, 0, m_size);
+        }
+
+        ConstPoolViewIter<comp_t> end() const {
+            return ConstPoolViewIter<comp_t>(m_view, m_size, m_size);
         }
 
         std::size_t getSize() const {

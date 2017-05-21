@@ -30,6 +30,10 @@ public:
         return m_val;
     }
 
+    void setVal(int val) {
+        m_val = val;
+    }
+
     void print() {
         std::cout << m_val << " nonconst\n";
     }
@@ -65,9 +69,10 @@ int main() {
     poola.deleteComponent(9);
 
     std::cout << "\nranged based for\n";
-    auto view = poola.getComponentView();
+    const auto view = poola.getComponentView();
     for(auto& comp : view) {
         std::cout << comp.getVal() << '\n';
+        //comp.setVal(10);
     }
 
     std::cout << "\nstd::for_each\n";
