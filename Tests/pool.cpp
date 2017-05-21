@@ -69,14 +69,18 @@ int main() {
     poola.deleteComponent(9);
 
     std::cout << "\nranged based for\n";
-    const auto view = poola.getComponentView();
-    for(auto& comp : view) {
+    const auto& cpoola = poola;
+    auto v = poola.getComponentView();
+    auto cv = cpoola.getComponentView();
+    for(auto& comp : cv) {
         std::cout << comp.getVal() << '\n';
-        //comp.setVal(10);
+    }
+    for(auto& comp : v) {
+        std::cout << comp.getVal() << '\n';
     }
 
     std::cout << "\nstd::for_each\n";
-    std::for_each(view.begin(), view.end(), [](auto& comp) {
+    std::for_each(v.begin(), v.end(), [](auto& comp) {
         std::cout << comp.getVal() << '\n';
     });
 
@@ -87,7 +91,7 @@ int main() {
     std::cout << (++iter)->getVal() << '\n';
 
     std::cout << "\nPoolView::map\n";
-    view.map([](auto& comp) {
+    v.map([](auto& comp) {
         comp.print();
     });
 

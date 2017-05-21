@@ -94,9 +94,100 @@ namespace Emerald {
     };
 
     template<typename comp_t>
+    class ConstPoolViewIter {
+    public:
+        ConstPoolViewIter(const Component<comp_t>* const view, const emerald_id loc, const emerald_id end)
+        : m_view(view)
+        , m_loc(loc)
+        , m_end(end) {
+            while(m_loc != m_end && m_view[m_loc].isEnabled() == false) {
+                m_loc++;
+            }
+        }
+
+        bool operator==(const ConstPoolViewIter<comp_t>& other) const {
+            return m_loc == other.m_loc;
+        }
+
+        bool operator!=(const ConstPoolViewIter<comp_t>& other) const {
+            return m_loc != other.m_loc;
+        }
+
+        ConstPoolViewIter& operator++() {
+            do {
+                m_loc++;
+            } while(m_loc != m_end && m_view[m_loc].isEnabled() == false);
+            return *this;
+        }
+
+        ConstPoolViewIter operator++(int) {
+            ConstPoolViewIter<comp_t> tmp(*this);
+            operator++();
+            return tmp;
+        }
+
+        const comp_t* operator->() const {
+            return &(m_view[m_loc].getComponent());
+        }
+
+        const comp_t& operator*() const {
+            return m_view[m_loc].getComponent();
+        }
+
+    private:
+        const Component<comp_t>* const m_view;
+        emerald_id m_loc;
+        const emerald_id m_end;
+    };
+
+    template<typename comp_t>
+    class ConstPoolView {
+    public:
+        ConstPoolView(const Component<comp_t>* const view, const std::size_t size) noexcept
+        : m_view(view)
+        , m_size(size) {}
+
+        ConstPoolViewIter<comp_t> begin() const {
+            return ConstPoolViewIter<comp_t>(m_view, 0, m_size);
+        }
+
+        ConstPoolViewIter<comp_t> end() const {
+            return ConstPoolViewIter<comp_t>(m_view, m_size, m_size);
+        }
+
+        std::size_t getSize() const {
+            return m_size;
+        }
+
+        bool contains(emerald_id id) const {
+            return id < m_size || !m_view[id].isEnabled();
+        }
+
+        const comp_t& operator[](emerald_id id) const {
+            if(m_view[id].isEnabled() && id < m_size) {
+                return m_view[id].getComponent();
+            } else {
+                throw bad_id("PoolView::operator[] invalid id");
+            }
+        }
+
+        void map(std::function<void(const comp_t&)> func) const {
+            for(std::size_t i = 0; i < m_size; i++) {
+                if(m_view[i].isEnabled()) {
+                    func(m_view[i].getComponent());
+                }
+            }
+        }
+
+    private:
+        const Component<comp_t>* const m_view;
+        const std::size_t m_size;
+    };
+
+    template<typename comp_t>
     class PoolViewIter {
     public:
-        PoolViewIter(Component<comp_t>* view, emerald_id loc, emerald_id end)
+        PoolViewIter(Component<comp_t>* const view, const emerald_id loc, const emerald_id end)
         : m_view(view)
         , m_loc(loc)
         , m_end(end) {
@@ -149,56 +240,9 @@ namespace Emerald {
     };
 
     template<typename comp_t>
-    class ConstPoolViewIter {
-    public:
-        ConstPoolViewIter(Component<comp_t>* view, emerald_id loc, emerald_id end)
-        : m_view(view)
-        , m_loc(loc)
-        , m_end(end) {
-            while(m_loc != m_end && m_view[m_loc].isEnabled() == false) {
-                m_loc++;
-            }
-        }
-
-        bool operator==(const ConstPoolViewIter<comp_t>& other) const {
-            return m_loc == other.m_loc;
-        }
-
-        bool operator!=(const ConstPoolViewIter<comp_t>& other) const {
-            return m_loc != other.m_loc;
-        }
-
-        ConstPoolViewIter& operator++() {
-            do {
-                m_loc++;
-            } while(m_loc != m_end && m_view[m_loc].isEnabled() == false);
-            return *this;
-        }
-
-        ConstPoolViewIter operator++(int) {
-            PoolViewIter<comp_t> tmp(*this);
-            operator++();
-            return tmp;
-        }
-
-        const comp_t* operator->() const {
-            return &(m_view[m_loc].getComponent());
-        }
-
-        const comp_t& operator*() const {
-            return m_view[m_loc].getComponent();
-        }
-
-    private:
-        const Component<comp_t>* const m_view;
-        emerald_id m_loc;
-        const emerald_id m_end;
-    };
-
-    template<typename comp_t>
     class PoolView {
     public:
-        PoolView(Component<comp_t>* view, std::size_t size) noexcept
+        PoolView(Component<comp_t>* const view, const std::size_t size) noexcept
         : m_view(view)
         , m_size(size) {}
 
@@ -259,8 +303,8 @@ namespace Emerald {
         }
 
     private:
-        Component<comp_t>* m_view;
-        std::size_t m_size;
+        Component<comp_t>* const m_view;
+        const std::size_t m_size;
     };
 
     class IBaseComponentPool {
@@ -325,8 +369,8 @@ namespace Emerald {
             return PoolView<comp_t>(m_poolBasePtr, m_poolTop);
         };
 
-        const PoolView<comp_t> getComponentView() const {
-            return PoolView<comp_t>(m_poolBasePtr, m_poolTop);
+        ConstPoolView<comp_t> getComponentView() const {
+            return ConstPoolView<comp_t>(m_poolBasePtr, m_poolTop);
         }
 
         comp_t& getComponent(emerald_id id) {
