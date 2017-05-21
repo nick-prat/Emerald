@@ -85,12 +85,18 @@ auto fib(int n) {
 // Using a view seems to be at the very least ~15% faster
 int main() {
     createEntities();
-    auto view = entMan.getComponentView<ComponentA>();
-    std::cout << view.getSize() << '\n';
-
     auto start = std::chrono::system_clock::now();
-    for(int i = 0; i < view.getSize(); i++) {
-        fib(view[i].getVal());
+    auto viewa = entMan.getComponentView<ComponentA>();
+    for(int i = 0; i < viewa.getSize(); i++) {
+        fib(viewa[i].getVal());
+    }
+    auto viewb = entMan.getComponentView<ComponentA>();
+    for(int i = 0; i < viewb.getSize(); i++) {
+        fib(viewb[i].getVal());
+    }
+    auto viewc = entMan.getComponentView<ComponentA>();
+    for(int i = 0; i < viewc.getSize(); i++) {
+        fib(viewc[i].getVal());
     }
     auto end = std::chrono::system_clock::now();
     auto time1 = end - start;
@@ -98,6 +104,8 @@ int main() {
     start = std::chrono::system_clock::now();
     entMan.mapEntities([](emerald_id id) {
         fib(entMan.getComponent<ComponentA>(id).getVal());
+        fib(entMan.getComponent<ComponentB>(id).getVal());
+        fib(entMan.getComponent<ComponentC>(id).getVal());
     });
     end = std::chrono::system_clock::now();
     auto time2 = end - start;

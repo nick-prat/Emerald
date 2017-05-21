@@ -41,7 +41,7 @@ namespace Emerald {
             static_cast<system_t*>(this)->handleEvent(eventID, event);
         }
 
-        void subscribe(unsigned int entityID) {
+        void subscribe(emerald_id entityID) {
             m_entities.insert(entityID);
         }
 
@@ -50,7 +50,7 @@ namespace Emerald {
         }
 
     protected:
-        std::set<unsigned int> m_entities;
+        std::set<emerald_id> m_entities;
     };
 
 };

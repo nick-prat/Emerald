@@ -15,12 +15,14 @@ namespace Emerald {
 
     class EntityManager {
     public:
-        unsigned int createEntity() {
+        EntityManager() : m_entityCount(0) {}
+
+        emerald_id createEntity() {
             m_entities[m_entityCount] = std::vector<emerald_long>();
             return m_entityCount++;
         }
 
-        void removeEntity(unsigned int id) {
+        void removeEntity(emerald_id id) {
             if(auto iter = m_entities.find(id); iter != m_entities.end()) {
                 for(auto id : iter->second) {
                     emerald_id type = (id >> 16);
@@ -87,7 +89,7 @@ namespace Emerald {
         }
 
         template<typename comp_t>
-        void removeComponent(unsigned int id) {
+        void removeComponent(emerald_id id) {
             auto iter = m_components.find(comp_t::getComponentID());
             if(iter != m_components.end()) {
                 iter->second->deleteComponent(id);

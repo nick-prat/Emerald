@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <unordered_map>
+#include <algorithm>
 
 using namespace Emerald;
 
@@ -23,6 +24,10 @@ public:
 
     static Emerald::emerald_id getComponentID() {
         return 0;
+    }
+
+    int getVal() const {
+        return m_val;
     }
 
     void print() {
@@ -50,20 +55,33 @@ public:
 };
 
 int main() {
-    std::unordered_map<int, int> map;
-    
-    if(auto iter = map.find(10); iter != map.end()) {
-        auto& [key, val] = iter.operator*();
-        std::cout << val << '\n';
-        val = 100;
-    }
-
     srand(time(0));
     ComponentPool<AComponent> poola(10);
     for(int i = 0; i < 10; i++)
         poola.createComponent(i);
 
+    poola.deleteComponent(0);
+    poola.deleteComponent(8);
+    poola.deleteComponent(9);
+
+    std::cout << "\nranged based for\n";
     auto view = poola.getComponentView();
+    for(auto& comp : view) {
+        std::cout << comp.getVal() << '\n';
+    }
+
+    std::cout << "\nstd::for_each\n";
+    std::for_each(view.begin(), view.end(), [](auto& comp) {
+        std::cout << comp.getVal() << '\n';
+    });
+
+    std::cout << "\noperator++ and operator->\n";
+    auto iter = poola.getComponentView().begin();
+    std::cout << iter++->getVal() << '\n';
+    std::cout << iter->getVal() << '\n';
+    std::cout << (++iter)->getVal() << '\n';
+
+    std::cout << "\nPoolView::map\n";
     view.map([](auto& comp) {
         comp.print();
     });
