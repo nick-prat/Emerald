@@ -53,6 +53,11 @@ namespace Emerald {
         std::set<emerald_id> m_entities;
     };
 
+    template<typename system_t>
+    inline emerald_id getSystemID() {
+        return system_t::getSystemID();
+    }
+
 };
 
 #endif // _SYSTEMS_H

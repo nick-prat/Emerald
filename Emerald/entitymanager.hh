@@ -3,8 +3,9 @@
 
 #include <vector>
 #include <memory>
+#include <array>
 #include <unordered_map>
-
+#include <iostream>
 #include "Util/types.hpp"
 #include "Util/exceptions.hpp"
 #include "component.hpp"
@@ -14,6 +15,9 @@
 namespace Emerald {
 
     class EntityManager {
+    private:
+        template<typename t> struct identity { typedef t type; };
+
     public:
         EntityManager() : m_entityCount(0) {}
 
@@ -22,7 +26,7 @@ namespace Emerald {
             return m_entityCount++;
         }
 
-        void removeEntity(emerald_id id) {
+        void removeEntity(const emerald_id id) {
             if(auto iter = m_entities.find(id); iter != m_entities.end()) {
                 for(auto id : iter->second) {
                     emerald_id type = (id >> 16);
@@ -33,25 +37,46 @@ namespace Emerald {
             }
         }
 
-        void mapEntities(std::function<void(emerald_id)> func) {
+        template<typename... comp_ts>
+        void mapEntities(std::function<void(const emerald_id)> func) {
             for(auto& [id, list] : m_entities) {
-                func(id);
+                if(entityHasComponents<comp_ts...>(id)) {
+                    func(id);
+                }
             }
+        }
+
+        template<typename... comp_ts>
+        bool entityHasComponents(const emerald_id entID) const {
+            return ((entityHasComponent<comp_ts>(entID) != invalid_id) && ...);
+        }
+
+        template<typename comp_t>
+        emerald_id entityHasComponent(const emerald_id entID) const {
+            if(auto iter = m_entities.find(entID); iter != m_entities.end()) {
+                auto compID = getComponentID<comp_t>();
+                for(auto comptag : iter->second) {
+                    if((comptag & comp_type_mask) >> 16 == compID) {
+                        return comptag & comp_id_mask;
+                    }
+                }
+            }
+            return invalid_id;
         }
 
         template<typename comp_t>
         PoolView<comp_t> getComponentView() {
-            if(auto iter = m_components.find(Component<comp_t>::getComponentID()); iter != m_components.end()) {
+            if(auto iter = m_components.find(getComponentID<comp_t>()); iter != m_components.end()) {
                 return static_cast<ComponentPool<comp_t>*>(iter->second.get())->getComponentView();
             } else {
-                throw bad_component("getComponentView invalid component type");
+                throw BadType("getComponentView invalid component type");
             }
         }
 
         template<typename comp_t, typename... args_t>
-        emerald_id createComponent(emerald_id id, args_t&&... args) {
-            auto compID = Component<comp_t>::getComponentID();
-            if(auto cid = entityHasComponent(id, compID); cid != invalid_id) {
+        emerald_id createComponent(const emerald_id id, args_t&&... args) {
+            auto compID = getComponentID<comp_t>();
+            if(auto cid = entityHasComponent<comp_t>(id); cid != invalid_id) {
                 return cid & comp_id_mask;
             }
             if(m_components.find(compID) == m_components.end()) {
@@ -63,36 +88,45 @@ namespace Emerald {
         }
 
         template<typename comp_t>
-        comp_t& getComponent(emerald_id id) {
-            auto compID = Component<comp_t>::getComponentID();
-            if(auto loc = entityHasComponent(id, compID); loc != invalid_id) {
+        comp_t& getComponent(const emerald_id id) {
+            auto compID = getComponentID<comp_t>();
+            if(auto loc = entityHasComponent<comp_t>(id); loc != invalid_id) {
                 return static_cast<ComponentPool<comp_t>*>(m_components[compID].get())->getComponent(loc);
             } else {
-                throw bad_component("getComponent invalid component type");
+                throw BadType("getComponent invalid component type");
             }
         }
 
         template<typename comp_t>
-        const comp_t& getComponent(emerald_id id) const {
-            auto compID = Component<comp_t>::getComponentID();
-            auto loc = entityHasComponent(id, compID);
+        const comp_t& getComponent(const emerald_id id) const {
+            auto compID = getComponentID<comp_t>();
+            auto loc = entityHasComponent<comp_t>(id);
             if(loc != invalid_id) {
                 if(auto iter = m_components.find(compID); iter != m_components.end()) {
                     auto& [id, uptr] = *iter;
                     return static_cast<const ComponentPool<comp_t>*>(uptr.get())->getComponent(loc);
                 } else {
-                    throw bad_component("getComponent const invalid component type");
+                    throw BadType("getComponent const invalid component type");
                 }
             } else {
-                throw bad_component("getComponent const Entity doesn't have component");
+                throw BadType("getComponent const Entity doesn't have component");
             }
         }
 
         template<typename comp_t>
-        void removeComponent(emerald_id id) {
-            auto iter = m_components.find(comp_t::getComponentID());
+        void removeComponent(const emerald_id id) {
+            auto iter = m_components.find(getComponentID<comp_t>());
             if(iter != m_components.end()) {
                 iter->second->deleteComponent(id);
+            }
+        }
+
+        template<typename... comp_ts>
+        void mapComponents(typename identity<std::function<void(comp_ts&...)>>::type func) {
+            for(auto [id, cv] : m_entities) {
+                if(entityHasComponents<comp_ts...>(id)) {
+                    func(static_cast<ComponentPool<comp_ts>*>(m_components[getComponentID<comp_ts>()].get())->getComponent(id)...);
+                }
             }
         }
 
@@ -102,7 +136,7 @@ namespace Emerald {
             if(auto iter = m_systems.find(system_id); iter == m_systems.end()) {
                 m_systems[system_id] = std::make_unique<system_t>(std::forward<args_t>(args)...);
             } else {
-                // TODO Throw proper error
+                BadType("System of type already exists");
             }
         }
 
@@ -112,7 +146,7 @@ namespace Emerald {
             if(system != m_systems.end()) {
                 return *(static_cast<system_t*>(system->second.get()));
             } else {
-                throw std::logic_error("system not found");
+                throw BadSystem("System not found");
             }
         }
 
@@ -122,7 +156,7 @@ namespace Emerald {
             if(system != m_systems.end()) {
                 return *(system->second.get());
             } else {
-                throw std::logic_error("system not found");
+                throw BadSystem("System not found");
             }
         }
 
@@ -131,18 +165,6 @@ namespace Emerald {
             for(auto& iter : m_systems) {
                 iter.second->update(*this);
             }
-        }
-
-    private:
-        emerald_id entityHasComponent(const emerald_id entID, const emerald_id compID) const {
-            if(auto iter = m_entities.find(entID); iter != m_entities.end()) {
-                for(auto comptag : iter->second) {
-                    if((comptag & comp_type_mask) >> 16 == compID) {
-                        return comptag & comp_id_mask;
-                    }
-                }
-            }
-            return invalid_id;
         }
 
     private:

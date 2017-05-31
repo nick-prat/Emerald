@@ -167,7 +167,7 @@ namespace Emerald {
             if(m_view[id].isEnabled() && id < m_size) {
                 return m_view[id].getComponent();
             } else {
-                throw bad_id("PoolView::operator[] invalid id");
+                throw BadID("PoolView::operator[] invalid id");
             }
         }
 
@@ -274,7 +274,7 @@ namespace Emerald {
             if(m_view[id].isEnabled() && id < m_size) {
                 return m_view[id].getComponent();
             } else {
-                throw bad_id("PoolView::operator[] invalid id");
+                throw BadID("PoolView::operator[] invalid id");
             }
         }
 
@@ -282,7 +282,7 @@ namespace Emerald {
             if(m_view[id].isEnabled() && id < m_size) {
                 return m_view[id].getComponent();
             } else {
-                throw bad_id("PoolView::operator[] invalid id");
+                throw BadID("PoolView::operator[] invalid id");
             }
         }
 
@@ -334,8 +334,8 @@ namespace Emerald {
             }
         }
 
-        template<typename... comp_args_t>
-        emerald_id createComponent(const emerald_id entID, comp_args_t... args) {
+        template<typename... args_t>
+        emerald_id createComponent(const emerald_id entID, args_t... args) {
             emerald_id location = 0;
             if(m_freeLocations.size() > 0) {
                 location = m_freeLocations.top();
@@ -349,12 +349,12 @@ namespace Emerald {
                 free(m_poolBasePtr);
                 m_poolBasePtr = newPtr;
                 m_poolSize *= 2;
-                return createComponent(entID, std::forward<comp_args_t>(args)...);
+                return createComponent(entID, std::forward<args_t>(args)...);
             } else {
                 location = m_poolTop;
                 m_poolTop++;
             }
-            new(m_poolBasePtr + location) Component<comp_t>(entID, std::forward<comp_args_t>(args)...);
+            new(m_poolBasePtr + location) Component<comp_t>(entID, std::forward<args_t>(args)...);
             return location;
         }
 
@@ -395,6 +395,12 @@ namespace Emerald {
         std::stack<emerald_id> m_freeLocations;
         std::size_t m_poolSize;
     };
+
+    template<typename comp_t>
+    inline emerald_id getComponentID() {
+        return Component<comp_t>::getComponentID();
+    }
+
 };
 
 #endif // _EMERALD_COMPONENT_H

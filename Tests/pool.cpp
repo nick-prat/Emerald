@@ -69,13 +69,15 @@ int main() {
     poola.deleteComponent(9);
 
     std::cout << "\nranged based for\n";
-    const auto& cpoola = poola;
     auto v = poola.getComponentView();
-    auto cv = cpoola.getComponentView();
-    for(auto& comp : cv) {
+    for(auto& comp : v) {
         std::cout << comp.getVal() << '\n';
     }
-    for(auto& comp : v) {
+
+    std::cout << "\nconst range based for\n";
+    const auto& cpoola = poola;
+    auto cv = cpoola.getComponentView();
+    for(auto& comp : cv) {
         std::cout << comp.getVal() << '\n';
     }
 

@@ -6,6 +6,19 @@
 #include <chrono>
 
 using namespace Emerald;
+using namespace std;
+
+auto fib(int n) {
+    auto v1 = -1;
+    auto v2 = 1;
+    auto total = 0;
+    for(int i = 0; i <= n; i++) {
+        total = v2 + v1;
+        v1 = v2;
+        v2 = total;
+    }
+    return v2;
+}
 
 class ComponentA {
 public:
@@ -55,36 +68,72 @@ private:
 class sys : public ISystem<sys> {
 public:
     void update(EntityManager& entMan) {
-        std::cout <<"soemthinn\n";
+        auto start = chrono::system_clock::now();
+        auto aview = entMan.getComponentView<ComponentA>();
+        auto cview = entMan.getComponentView<ComponentC>();
+        entMan.mapEntities<ComponentA, ComponentC>([&aview, &cview, &entMan](emerald_id ent) {
+            auto& compa = aview[entMan.entityHasComponent<ComponentA>(ent)];
+            auto& compc = cview[entMan.entityHasComponent<ComponentC>(ent)];
+            if(compa.getVal() != compc.getVal()) {
+                std::cout << "error\n";
+            }
+        });
+        std::cout << "system1 in " << chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - start).count() << '\n';
+        start = chrono::system_clock::now();
+        entMan.mapComponents<ComponentA, ComponentC>([](auto& ca, auto& cc) {
+            if(ca.getVal() != cc.getVal()) {
+                std::cout << "error\n";
+            }
+        });
+        std::cout << "system2 in " << chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - start).count() << '\n';
     }
 };
 
 EntityManager entMan;
 
 void createEntities() {
+    auto& s = entMan.getSystem<sys>();
     for(auto a = 0; a < 1000; a++) {
         auto id = entMan.createEntity();
         entMan.createComponent<ComponentA>(id, id);
         entMan.createComponent<ComponentB>(id, id);
         entMan.createComponent<ComponentC>(id, id);
+        s.subscribe(id);
     }
-}
-
-auto fib(int n) {
-    auto v1 = -1;
-    auto v2 = 1;
-    auto total = 0;
-    for(int i = 0; i <= n; i++) {
-        total = v2 + v1;
-        v1 = v2;
-        v2 = total;
-    }
-    return v2;
 }
 
 // Using a view seems to be at the very least ~15% faster
 int main() {
+    entMan.registerSystem<sys>();
     createEntities();
+
+    entMan.updateSystems(1.0f);
+
+    if(entMan.entityHasComponents<ComponentA, ComponentB, ComponentC>(0)) {
+        std::cout << "Entity has components!\n";
+    } else {
+        std::cout << "Entity does not have components\n";
+    }
+
+    int total = 0;
+    auto mstart = std::chrono::system_clock::now();
+    entMan.mapComponents<ComponentA, ComponentC>([](auto& ca, auto& cc) {
+        if(ca.getVal() != cc.getVal()) {
+            std::cout << "Mapping failure\n";
+        }
+    });
+    std::cout << "Map timing " << std::chrono::duration_cast<chrono::microseconds>(std::chrono::system_clock::now() - mstart).count() << '\n';
+
+    total = 0;
+    auto cstart = std::chrono::system_clock::now();
+    for(auto& comp : entMan.getComponentView<ComponentA>()) {
+        fib(comp.getVal());
+    }
+    for(auto& comp : entMan.getComponentView<ComponentC>()) {
+        fib(comp.getVal());
+    }
+    std::cout << "Iter timing " << std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now() - cstart).count() << '\n';
+
     auto start = std::chrono::system_clock::now();
     auto viewa = entMan.getComponentView<ComponentA>();
     for(int i = 0; i < viewa.getSize(); i++) {
@@ -100,6 +149,8 @@ int main() {
     }
     auto end = std::chrono::system_clock::now();
     auto time1 = end - start;
+
+    std::cout << "begging map\n";
 
     start = std::chrono::system_clock::now();
     entMan.mapEntities([](emerald_id id) {
