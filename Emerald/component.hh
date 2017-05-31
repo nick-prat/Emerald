@@ -5,8 +5,8 @@
 #include <stack>
 #include <cstdlib>
 #include <cstring>
-#include "Util/types.hpp"
-#include "Util/exceptions.hpp"
+#include "Util/types.hh"
+#include "Util/exceptions.hh"
 
 namespace Emerald {
 

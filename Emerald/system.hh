@@ -3,8 +3,7 @@
 
 #include <set>
 
-#include "event.hpp"
-#include "Util/types.hpp"
+#include "Util/types.hh"
 
 namespace Emerald {
 
@@ -36,10 +35,6 @@ namespace Emerald {
 
         ISystem& operator=(const ISystem&) = delete;
         ISystem& operator=(ISystem&& system) = delete;
-
-        void handleEvent(IBaseEvent::event_id eventID, const IBaseEvent& event) {
-            static_cast<system_t*>(this)->handleEvent(eventID, event);
-        }
 
         void subscribe(emerald_id entityID) {
             m_entities.insert(entityID);

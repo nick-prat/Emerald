@@ -6,11 +6,10 @@
 #include <array>
 #include <unordered_map>
 #include <iostream>
-#include "Util/types.hpp"
-#include "Util/exceptions.hpp"
-#include "component.hpp"
-#include "event.hpp"
-#include "system.hpp"
+#include "Util/types.hh"
+#include "Util/exceptions.hh"
+#include "component.hh"
+#include "system.hh"
 
 namespace Emerald {
 
