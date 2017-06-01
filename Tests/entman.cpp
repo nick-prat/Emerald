@@ -38,7 +38,7 @@ private:
 class ComponentB {
 public:
     ComponentB(int val) : m_val(val) {};
-    ComponentB(const ComponentA&) = delete;
+    ComponentB(const ComponentB&) = delete;
     ComponentB(ComponentB&&) noexcept = default;
     int getVal() {
         return m_val;
@@ -53,7 +53,7 @@ private:
 class ComponentC {
 public:
     ComponentC(int val) : m_val(val) {};
-    ComponentC(const ComponentA&) = delete;
+    ComponentC(const ComponentC&) = delete;
     ComponentC(ComponentC&&) noexcept = default;
     int getVal() {
         return m_val;

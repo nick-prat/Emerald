@@ -63,6 +63,10 @@ namespace Emerald {
             return invalid_id;
         }
 
+        std::size_t getEntityCount() const {
+            return m_entities.size();
+        }
+
         template<typename comp_t>
         PoolView<comp_t> getComponentView() {
             if(auto iter = m_components.find(getComponentID<comp_t>()); iter != m_components.end()) {
@@ -164,6 +168,10 @@ namespace Emerald {
             for(auto& iter : m_systems) {
                 iter.second->update(*this);
             }
+        }
+
+        float getTimeScale() const {
+            return m_timeScale;
         }
 
     private:

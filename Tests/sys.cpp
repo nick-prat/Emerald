@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../Emerald/entitymanager.hpp"
+#include "../Emerald/entitymanager.hh"
 
 using namespace Emerald;
 

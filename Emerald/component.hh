@@ -335,7 +335,7 @@ namespace Emerald {
         }
 
         template<typename... args_t>
-        emerald_id createComponent(const emerald_id entID, args_t... args) {
+        emerald_id createComponent(const emerald_id entID, args_t&&... args) {
             emerald_id location = 0;
             if(m_freeLocations.size() > 0) {
                 location = m_freeLocations.top();
