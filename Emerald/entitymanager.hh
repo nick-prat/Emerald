@@ -77,7 +77,7 @@ namespace Emerald {
         }
 
         template<typename comp_t, typename... args_t>
-        emerald_id createComponent(const emerald_id id, args_t&&... args) {
+        std::enable_if_t<std::is_constructible<comp_t, args_t...>::value, emerald_id> createComponent(const emerald_id id, args_t&&... args) {
             auto compID = getComponentID<comp_t>();
             if(auto cid = entityHasComponent<comp_t>(id); cid != invalid_id) {
                 return cid & comp_id_mask;
@@ -163,19 +163,13 @@ namespace Emerald {
             }
         }
 
-        void updateSystems(const float timeScale) {
-            m_timeScale = timeScale;
+        void updateSystems() {
             for(auto& iter : m_systems) {
                 iter.second->update(*this);
             }
         }
 
-        float getTimeScale() const {
-            return m_timeScale;
-        }
-
     private:
-        float m_timeScale;
         std::size_t m_entityCount;
         std::unordered_map<emerald_id, std::vector<emerald_long>> m_entities;
         std::unordered_map<emerald_id, std::unique_ptr<IBaseSystem>> m_systems;
