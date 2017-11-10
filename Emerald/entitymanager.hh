@@ -90,6 +90,11 @@ namespace Emerald {
             return cid;
         }
 
+        template<typename... comp_ts>
+        std::tuple<comp_ts&&...> getComponents(const emerald_id id) {
+            return {std::forward<comp_ts>(getComponent<comp_ts>(id))...};
+        }
+
         template<typename comp_t>
         comp_t& getComponent(const emerald_id id) {
             auto compID = getComponentID<comp_t>();
