@@ -367,7 +367,7 @@ namespace Emerald {
 
         PoolView<comp_t> getComponentView() {
             return PoolView<comp_t>(m_poolBasePtr, m_poolTop);
-        };
+        }
 
         ConstPoolView<comp_t> getComponentView() const {
             return ConstPoolView<comp_t>(m_poolBasePtr, m_poolTop);
@@ -395,6 +395,24 @@ namespace Emerald {
         std::stack<emerald_id> m_freeLocations;
         std::size_t m_poolSize;
     };
+
+	template<typename comp_t>
+	class ComponentAllocator {
+	public:
+		ComponentAllocator(ComponentPool<comp_t>& pool)
+		: m_pool(pool) {}
+
+		comp_t* allocate(std::size_t count) {
+
+		}
+
+		void deallocate(comp_t* memory, std::size_t count) {
+
+		}
+
+	private:
+		ComponentPool<comp_t>& m_pool;
+	};
 
     template<typename comp_t>
     inline emerald_id getComponentID() {
